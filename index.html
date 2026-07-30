@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Laporan Level Molten Material</title>
+<style>
+  :root{
+    --bg-primary:#14171a;
+    --bg-panel:#1c2126;
+    --bg-panel-2:#20262c;
+    --accent-molten:#ff7a33;
+    --accent-molten-dim:#7a3d1c;
+    --accent-slag:#4fd1a5;
+    --text-primary:#e9e7e1;
+    --text-muted:#8a939b;
+    --border:#2b323a;
+    --danger:#ff5c5c;
+    --font-display: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-mono: ui-monospace, "SFMono-Regular", "Consolas", "Menlo", monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg-primary);
+    color:var(--text-primary);
+    font-family:var(--font-display);
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:60px;
+  }
+  .wrap{max-width:520px;margin:0 auto;padding:0 14px;}
+
+  /* header */
+  .topbar{
+    background:linear-gradient(180deg,#1a1e22,#14171a);
+    border-bottom:1px solid var(--border);
+    padding:22px 14px 20px;
+    position:relative;
+    overflow:hidden;
+  }
+  .topbar::before{
+    content:"";
+    position:absolute;top:-40px;right:-40px;width:160px;height:160px;
+    background:radial-gradient(circle, var(--accent-molten-dim) 0%, transparent 70%);
+    opacity:.5;
+  }
+  .eyebrow{
+    font-size:11px;letter-spacing:2.5px;color:var(--accent-molten);
+    font-weight:700;text-transform:uppercase;margin:0 0 6px;
+  }
+  .title{
+    font-size:21px;font-weight:800;letter-spacing:.3px;margin:0 0 4px;
+    position:relative;
+  }
+  .subtitle{font-size:13px;color:var(--text-muted);margin:0;position:relative;}
+
+  /* cards */
+  .card{
+    background:var(--bg-panel);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:16px;
+    margin-top:14px;
+  }
+  .step-label{
+    display:flex;align-items:center;gap:8px;
+    font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+    color:var(--text-muted);margin-bottom:12px;
+  }
+  .step-num{
+    width:20px;height:20px;border-radius:5px;
+    background:var(--accent-molten-dim);color:var(--accent-molten);
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:800;flex-shrink:0;
+  }
+
+  label.field-label{
+    display:block;font-size:12.5px;color:var(--text-muted);margin:12px 0 6px;font-weight:600;
+  }
+  label.field-label:first-child{margin-top:0;}
+  input[type=date], input[type=time], input[type=number], select{
+    width:100%;
+    background:var(--bg-panel-2);
+    border:1px solid var(--border);
+    color:var(--text-primary);
+    padding:11px 12px;
+    border-radius:8px;
+    font-size:15px;
+    font-family:var(--font-mono);
+    outline:none;
+  }
+  input:focus, select:focus{border-color:var(--accent-molten);}
+  select{font-family:var(--font-display);}
+
+  .toggle-row{display:flex;gap:8px;}
+  .toggle-btn{
+    flex:1;
+    padding:12px 8px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:var(--bg-panel-2);
+    color:var(--text-muted);
+    font-size:13.5px;font-weight:700;
+    cursor:pointer;
+    text-align:center;
+    transition:all .15s ease;
+  }
+  .toggle-btn.active{
+    background:var(--accent-molten-dim);
+    border-color:var(--accent-molten);
+    color:var(--accent-molten);
+  }
+  .toggle-btn.active.slag-style{
+    background:#15352d;border-color:var(--accent-slag);color:var(--accent-slag);
+  }
+
+  .hint{font-size:11.5px;color:var(--text-muted);margin-top:6px;}
+
+  /* readout */
+  .readout{
+    margin-top:14px;
+    background:#0d0f11;
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:16px;
+  }
+  .readout-title{
+    font-size:11px;letter-spacing:1.5px;color:var(--text-muted);
+    text-transform:uppercase;font-weight:700;margin-bottom:10px;
+  }
+  .readout-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .readout-grid.single{grid-template-columns:1fr;}
+  .readout-box{
+    background:var(--bg-panel);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:12px;
+    text-align:center;
+  }
+  .readout-label{font-size:11px;color:var(--text-muted);margin-bottom:4px;font-weight:600;}
+  .readout-value{
+    font-family:var(--font-mono);
+    font-size:26px;font-weight:800;
+    color:var(--accent-molten);
+    text-shadow:0 0 18px rgba(255,122,51,.35);
+  }
+  .readout-value.slag{color:var(--accent-slag);text-shadow:0 0 18px rgba(79,209,165,.3);}
+  .readout-formula{
+    font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-top:6px;
+  }
+
+  /* preview */
+  .preview-box{
+    background:#0d0f11;
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:14px;
+    font-family:var(--font-mono);
+    font-size:13px;
+    white-space:pre-wrap;
+    line-height:1.6;
+    color:var(--text-primary);
+  }
+  .preview-box .g{color:var(--accent-slag);font-weight:700;}
+  .copy-btn{
+    margin-top:10px;width:100%;
+    background:var(--bg-panel-2);
+    border:1px solid var(--border);
+    color:var(--text-primary);
+    padding:11px;border-radius:8px;
+    font-size:13.5px;font-weight:700;
+    cursor:pointer;
+  }
+  .copy-btn:active{transform:scale(.98);}
+
+  .note{
+    font-size:12px;color:var(--text-muted);font-style:italic;
+    margin-top:14px;line-height:1.7;padding:0 2px;
+  }
+
+  .submit-btn{
+    width:100%;margin-top:16px;
+    background:var(--accent-molten);
+    color:#1a1005;
+    border:none;padding:15px;border-radius:10px;
+    font-size:15px;font-weight:800;letter-spacing:.3px;
+    cursor:pointer;
+  }
+  .submit-btn:active{transform:scale(.98);}
+  .submit-btn:disabled{opacity:.5;}
+
+  .toast{
+    position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);
+    background:var(--accent-slag);color:#08201a;
+    padding:11px 18px;border-radius:8px;font-size:13.5px;font-weight:700;
+    opacity:0;transition:all .25s ease;pointer-events:none;
+    max-width:90%;text-align:center;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .hidden{display:none !important;}
+
+  /* history */
+  .hist-header{
+    display:flex;align-items:center;justify-content:space-between;cursor:pointer;
+  }
+  .hist-toggle{font-size:12px;color:var(--accent-molten);font-weight:700;}
+  .hist-table-wrap{overflow-x:auto;margin-top:10px;}
+  table.hist{width:100%;border-collapse:collapse;font-size:11.5px;font-family:var(--font-mono);}
+  table.hist th, table.hist td{
+    padding:7px 8px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;
+  }
+  table.hist th{color:var(--text-muted);font-weight:700;font-family:var(--font-display);font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;}
+  .empty-hist{color:var(--text-muted);font-size:12.5px;padding:8px 0;}
+  .export-btn{
+    margin-top:12px;width:100%;
+    background:transparent;border:1px solid var(--accent-slag);color:var(--accent-slag);
+    padding:11px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;
+  }
+  .count-badge{
+    font-size:11px;color:var(--text-muted);font-weight:600;
+  }
+  .sheet-status{
+    font-size:11px;margin-top:8px;color:var(--text-muted);
+  }
+  .sheet-status.ok{color:var(--accent-slag);}
+  .sheet-status.off{color:var(--danger);}
+</style>
+</head>
+<body>
+
+<div class="topbar wrap" style="max-width:none;">
+  <div class="wrap" style="padding:0;">
+    <p class="eyebrow">Mrm &middot; Molten Level Report</p>
+    <h1 class="title">Laporan Level Molten Material</h1>
+    <p class="subtitle">Isi pengukuran slag / FeNi langsung dari HP operator</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- STEP 1: data umum -->
+  <div class="card">
+    <div class="step-label"><span class="step-num">1</span>Data Umum</div>
+
+    <label class="field-label">Tanggal</label>
+    <input type="date" id="tanggal">
+
+    <label class="field-label">Jam</label>
+    <input type="time" id="jam">
+
+    <label class="field-label">Shift</label>
+    <select id="shift">
+      <option value="">Pilih shift</option>
+      <option value="Shift 1">Shift 1</option>
+      <option value="Shift 2">Shift 2</option>
+      <option value="Shift 3">Shift 3</option>
+      <option value="Shift 4">Shift 4</option>
+    </select>
+
+    <label class="field-label">Posisi Pengukuran</label>
+    <div class="toggle-row" id="posisiToggle">
+      <div class="toggle-btn" data-val="Barat">Barat</div>
+      <div class="toggle-btn" data-val="Timur">Timur</div>
+    </div>
+  </div>
+
+  <!-- STEP 2: jenis pengukuran -->
+  <div class="card">
+    <div class="step-label"><span class="step-num">2</span>Jenis Pengukuran</div>
+    <div class="toggle-row" id="jenisToggle">
+      <div class="toggle-btn" data-val="slag">Slag Saja</div>
+      <div class="toggle-btn" data-val="fenislag">FeNi &amp; Slag</div>
+    </div>
+  </div>
+
+  <!-- STEP 3: input FeNi & Slag -->
+  <div class="card hidden" id="cardFeniSlag">
+    <div class="step-label"><span class="step-num">3</span>Input Pengukuran (FeNi &amp; Slag)</div>
+
+    <label class="field-label">Panjang Bar Awal (cm)</label>
+    <input type="number" id="barAwal" inputmode="decimal" placeholder="0">
+
+    <label class="field-label">Void (cm)</label>
+    <input type="number" id="feniDepth" inputmode="decimal" placeholder="0">
+
+    <label class="field-label">Slag Depth (cm)</label>
+    <input type="number" id="slagDepth" inputmode="decimal" placeholder="0">
+
+    <label class="field-label">Ada Build Up? Berapa cm</label>
+    <input type="number" id="buildUp" inputmode="decimal" placeholder="0" value="0">
+
+    <label class="field-label">Bar Melar (cm)</label>
+    <input type="number" id="barMelar" inputmode="decimal" placeholder="0" value="0">
+
+    <!-- readout -->
+    <div class="readout">
+      <div class="readout-title">Hasil Kalkulasi Otomatis</div>
+      <div class="readout-grid">
+        <div class="readout-box">
+          <div class="readout-label">FeNi Level</div>
+          <div class="readout-value" id="outFeniLevel">0</div>
+          <div class="readout-formula" id="formFeniLevel">= 0 - 0 - 0</div>
+        </div>
+        <div class="readout-box">
+          <div class="readout-label">Slag Level</div>
+          <div class="readout-value slag" id="outSlagLevel">0</div>
+          <div class="readout-formula" id="formSlagLevel">= 550 - 0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3 alt: input slag saja -->
+  <div class="card hidden" id="cardSlagOnly">
+    <div class="step-label"><span class="step-num">3</span>Input Pengukuran (Slag)</div>
+    <label class="field-label">Level Slag (cm)</label>
+    <input type="number" id="slagManual" inputmode="decimal" placeholder="0">
+  </div>
+
+  <!-- preview -->
+  <div class="card hidden" id="cardPreview">
+    <div class="step-label"><span class="step-num">4</span>Preview Laporan &middot; Salin untuk Grup Kerja</div>
+    <div class="preview-box" id="previewText">-</div>
+    <button class="copy-btn" id="copyBtn">Salin Teks Laporan</button>
+  </div>
+
+  <p class="note">
+    Semua pengukuran ditulis dalam bentuk cm. Jika tidak ada, tulis angka "0" (misal bar melar atau build up tidak ada, tulis 0).
+    Jika dirasa ada yang salah, silahkan klik kirim saja lalu refresh dan isi lagi.
+  </p>
+
+  <button class="submit-btn" id="submitBtn">Kirim Laporan</button>
+  <div class="sheet-status" id="sheetStatus"></div>
+
+  <!-- history -->
+  <div class="card" style="margin-top:24px;">
+    <div class="hist-header" id="histHeader">
+      <div class="step-label" style="margin-bottom:0;"><span class="step-num">i</span>Riwayat Laporan</div>
+      <span class="hist-toggle" id="histToggleLabel">Tampilkan</span>
+    </div>
+    <div id="histBody" class="hidden">
+      <div class="hist-table-wrap">
+        <table class="hist" id="histTable">
+          <thead>
+            <tr>
+              <th>Tgl</th><th>Jam</th><th>Shift</th><th>Posisi</th><th>Jenis</th><th>FeNi Lv</th><th>Slag Lv</th>
+            </tr>
+          </thead>
+          <tbody id="histTbody"></tbody>
+        </table>
+      </div>
+      <div class="empty-hist hidden" id="emptyHist">Belum ada data tersimpan.</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+        <span class="count-badge" id="countBadge">0 data</span>
+      </div>
+      <button class="export-btn" id="exportBtn">Unduh Semua Data (Excel / CSV)</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+
+  // =====================================================================
+  // KONEKSI KE GOOGLE SHEET
+  // Ganti nilai di bawah ini dengan URL Web App Apps Script Anda
+  // (lihat file apps-script-code.gs untuk kode yang perlu ditempel di
+  // Google Sheet Anda). URL akan berbentuk:
+  // https://script.google.com/macros/s/XXXXXXXXXXXXXXXXXXXX/exec
+  // =====================================================================
+  const SHEET_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw3SelMGYN6wTYNqnw72YhC5U0mWIQgra6oFmou31bgemalBYOBISxhyoGNn3tUGl9k/exec";
+
+  function isSheetConfigured(){
+    return SHEET_WEBAPP_URL && !SHEET_WEBAPP_URL.includes("PASTE_URL_WEB_APP_ANDA_DI_SINI");
+  }
+
+  // Kirim data ke Google Sheet. Memakai mode 'no-cors' karena Apps Script
+  // Web App tidak selalu mengirim header CORS yang bisa dibaca browser;
+  // dengan no-cors kita tetap bisa MENGIRIM data walau tidak bisa MEMBACA
+  // responnya. Karena itu kita anggap berhasil jika tidak ada error jaringan.
+  async function postToSheet(record){
+    if(!isSheetConfigured()) return { ok:false, reason:'not-configured' };
+    try{
+      await fetch(SHEET_WEBAPP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(record)
+      });
+      return { ok:true };
+    }catch(err){
+      console.error('Gagal kirim ke Google Sheet', err);
+      return { ok:false, reason:'network-error' };
+    }
+  }
+
+  // tampilkan status koneksi sheet di bawah tombol kirim
+  const statusEl = $('sheetStatus');
+  if(isSheetConfigured()){
+    statusEl.textContent = 'Terhubung ke Google Sheet';
+    statusEl.classList.add('ok');
+  } else {
+    statusEl.textContent = 'Belum terhubung ke Google Sheet (isi SHEET_WEBAPP_URL di kode)';
+    statusEl.classList.add('off');
+  }
+
+  // defaults: today + now
+  const now = new Date();
+  $('tanggal').value = now.toISOString().slice(0,10);
+  $('jam').value = now.toTimeString().slice(0,5);
+
+  let posisi = null;
+  let jenis = null;
+
+  // toggle groups
+  function setupToggle(containerId, onChange, styleClass){
+    const el = $(containerId);
+    el.querySelectorAll('.toggle-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        el.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active','slag-style'));
+        btn.classList.add('active');
+        if(styleClass && btn.dataset.val==='slag') btn.classList.add('slag-style');
+        onChange(btn.dataset.val);
+      });
+    });
+  }
+
+  setupToggle('posisiToggle', v=>{ posisi = v; updatePreview(); });
+  setupToggle('jenisToggle', v=>{
+    jenis = v;
+    $('cardFeniSlag').classList.toggle('hidden', v!=='fenislag');
+    $('cardSlagOnly').classList.toggle('hidden', v!=='slag');
+    $('cardPreview').classList.remove('hidden');
+    updatePreview();
+  }, true);
+
+  const numIds = ['barAwal','feniDepth','slagDepth','buildUp','barMelar','slagManual'];
+  numIds.forEach(id=>{
+    $(id).addEventListener('input', ()=>{ calcAndPreview(); });
+  });
+  ['tanggal','jam','shift'].forEach(id=>{
+    $(id).addEventListener('input', updatePreview);
+    $(id).addEventListener('change', updatePreview);
+  });
+
+  function num(id){
+    const v = parseFloat($(id).value);
+    return isNaN(v) ? 0 : v;
+  }
+
+  function calcAndPreview(){
+    if(jenis==='fenislag'){
+      const barAwal = num('barAwal');
+      const feniDepth = num('feniDepth');
+      const slagDepth = num('slagDepth');
+
+      const feniLevel = (barAwal - feniDepth - slagDepth);
+      const slagLevel = (550 - feniDepth);
+
+      $('outFeniLevel').textContent = feniLevel.toFixed(0)+' cm';
+      $('outSlagLevel').textContent = slagLevel.toFixed(0)+' cm';
+      $('formFeniLevel').textContent = `= ${barAwal}-${feniDepth}-${slagDepth}`;
+      $('formSlagLevel').textContent = `= 550-${feniDepth}`;
+    }
+    updatePreview();
+  }
+
+  function updatePreview(){
+    if(!jenis) return;
+    const tgl = $('tanggal').value;
+    const jam = $('jam').value || '--:--';
+    const posisiLabel = posisi || '-';
+    let text = '';
+
+    if(jenis==='fenislag'){
+      const barAwal = num('barAwal');
+      const feniDepth = num('feniDepth');
+      const slagDepth = num('slagDepth');
+      const buildUp = num('buildUp');
+      const barMelar = num('barMelar');
+      const feniLevel = (barAwal - feniDepth - slagDepth);
+      const slagLevel = (550 - feniDepth);
+
+      text =
+`Mrm ${posisiLabel} ${jam} (FeNi) update
+
+FeNi level  = ${feniLevel} cm
+Void        = ${feniDepth} cm
+Slag Dept   = ${slagDepth} cm
+Slag level  = ${slagLevel} cm
+
+${barAwal}-${feniDepth}-${slagDepth}  = ${feniLevel} cm
+550-${feniDepth}  = ${slagLevel} cm
+
+Note. ${barMelar} cm bar melar${buildUp ? ' | Build up '+buildUp+' cm' : ''}`;
+    } else if(jenis==='slag'){
+      const slagManual = num('slagManual');
+      text =
+`Mrm ${posisiLabel} ${jam} (Slag) update
+
+Slag level  = ${slagManual} cm`;
+    }
+
+    $('previewText').textContent = text;
+  }
+
+  // copy button
+  $('copyBtn').addEventListener('click', ()=>{
+    const text = $('previewText').textContent;
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(()=>showToast('Teks laporan disalin')).catch(()=>fallbackCopy(text));
+    } else {
+      fallbackCopy(text);
+    }
+  });
+  function fallbackCopy(text){
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); showToast('Teks laporan disalin'); }catch(e){}
+    document.body.removeChild(ta);
+  }
+
+  function showToast(msg){
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2200);
+  }
+
+  // ---- storage lokal (untuk riwayat di dalam dashboard) ----
+  const STORAGE_KEY = 'molten-measurements';
+  let localFallback = [];
+  let sharedStorageOk = true;
+
+  async function loadData(){
+    try{
+      const res = await window.storage.get(STORAGE_KEY, true);
+      const remote = res ? JSON.parse(res.value) : [];
+      sharedStorageOk = true;
+      return remote;
+    }catch(e){
+      return localFallback;
+    }
+  }
+  async function saveData(arr){
+    try{
+      await window.storage.set(STORAGE_KEY, JSON.stringify(arr), true);
+      sharedStorageOk = true;
+      return true;
+    }catch(e){
+      console.error('storage error, pakai fallback lokal', e);
+      localFallback = arr;
+      sharedStorageOk = false;
+      return true;
+    }
+  }
+
+  function renderHistory(data){
+    const tbody = $('histTbody');
+    tbody.innerHTML = '';
+    const sorted = [...data].sort((a,b)=> (b.ts||0)-(a.ts||0)).slice(0,30);
+    if(sorted.length===0){
+      $('emptyHist').classList.remove('hidden');
+    } else {
+      $('emptyHist').classList.add('hidden');
+      sorted.forEach(r=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${r.tanggal||''}</td><td>${r.jam||''}</td><td>${r.shift||''}</td><td>${r.posisi||''}</td><td>${r.jenis==='fenislag'?'FeNi&Slag':'Slag'}</td><td>${r.feniLevel!==undefined?r.feniLevel:'-'}</td><td>${r.slagLevel!==undefined?r.slagLevel:'-'}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    $('countBadge').textContent = data.length + ' data tersimpan';
+  }
+
+  async function refreshHistory(){
+    const data = await loadData();
+    renderHistory(data);
+    return data;
+  }
+
+  $('histHeader').addEventListener('click', ()=>{
+    const body = $('histBody');
+    const isHidden = body.classList.contains('hidden');
+    body.classList.toggle('hidden');
+    $('histToggleLabel').textContent = isHidden ? 'Sembunyikan' : 'Tampilkan';
+    if(isHidden) refreshHistory();
+  });
+
+  // submit
+  $('submitBtn').addEventListener('click', async ()=>{
+    if(!posisi){ showToast('Pilih posisi Barat / Timur dulu'); return; }
+    if(!jenis){ showToast('Pilih jenis pengukuran dulu'); return; }
+    if(!$('shift').value){ showToast('Pilih shift dulu'); return; }
+
+    const btn = $('submitBtn');
+    btn.disabled = true; btn.textContent = 'Mengirim...';
+
+    const record = {
+      id: Date.now()+'-'+Math.random().toString(36).slice(2,7),
+      ts: Date.now(),
+      tanggal: $('tanggal').value,
+      jam: $('jam').value,
+      shift: $('shift').value,
+      posisi: posisi,
+      jenis: jenis
+    };
+
+    if(jenis==='fenislag'){
+      record.barAwal = num('barAwal');
+      record.feniDepth = num('feniDepth');
+      record.slagDepth = num('slagDepth');
+      record.buildUp = num('buildUp');
+      record.barMelar = num('barMelar');
+      record.feniLevel = (record.barAwal - record.feniDepth - record.slagDepth);
+      record.slagLevel = (550 - record.feniDepth);
+    } else {
+      record.slagLevel = num('slagManual');
+    }
+
+    // simpan ke riwayat dalam dashboard (seperti sebelumnya)
+    const data = await loadData();
+    data.push(record);
+    const ok = await saveData(data);
+
+    // kirim juga ke Google Sheet (jika sudah dikonfigurasi)
+    const sheetResult = await postToSheet(record);
+
+    btn.disabled = false; btn.textContent = 'Kirim Laporan';
+
+    if(ok){
+      if(isSheetConfigured()){
+        showToast(sheetResult.ok ? 'Laporan tersimpan & terkirim ke Google Sheet' : 'Tersimpan, tapi gagal kirim ke Sheet (cek koneksi)');
+      } else {
+        showToast(sharedStorageOk ? 'Laporan tersimpan' : 'Laporan tersimpan di sesi ini');
+      }
+      refreshHistory();
+    } else {
+      showToast('Gagal menyimpan, coba lagi');
+    }
+  });
+
+  // export CSV
+  $('exportBtn').addEventListener('click', async ()=>{
+    const data = await loadData();
+    if(data.length===0){ showToast('Belum ada data'); return; }
+    const headers = ['tanggal','jam','Shift','Posisi','Jenis','Level slag','Level FeNi','Build up'];
+    const DELIM = ';';
+    function q(val){
+      const s = (val===undefined || val===null) ? '' : String(val);
+      return '"' + s.replace(/"/g,'""') + '"';
+    }
+    const rows = data.sort((a,b)=>(a.ts||0)-(b.ts||0)).map(r=>[
+      r.tanggal||'', r.jam||'', r.shift||'', r.posisi||'',
+      r.jenis==='fenislag' ? 'FeNi & Slag' : 'Slag Saja',
+      r.slagLevel!==undefined ? r.slagLevel : '',
+      r.feniLevel!==undefined ? r.feniLevel : '',
+      r.buildUp!==undefined ? r.buildUp : 0
+    ]);
+    let csv = headers.map(q).join(DELIM) + '\n' + rows.map(row=>row.map(q).join(DELIM)).join('\n');
+    const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'laporan-molten-material.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  // init
+  refreshHistory();
+})();
+</script>
+
+</body>
+</html>
